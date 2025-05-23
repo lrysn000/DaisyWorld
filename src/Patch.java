@@ -19,7 +19,7 @@ class Patch {
 
         if (!hasDaisy()) {
             // If there are no daisies on this patch
-            absorbedLuminosity = (1 - 0.4) * solarLuminosity; //  albedo-of-surface : 0.4
+            absorbedLuminosity = (1 - DaisySimulationGUI.ALBEDO_OF_SURFACE) * solarLuminosity; //  albedo-of-surface : 0.4
         } else {
             // If there is at least one daisy, get the albedo from the daisies here
             Daisy currentDaisy = daisy; // Assuming only one daisy is present in this patch

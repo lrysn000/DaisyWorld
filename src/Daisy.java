@@ -54,8 +54,10 @@ class Daisy {
                 if (seedingPlaceyCord != -1) {
                     if (color==0 && !DaisySimulationGUI.patches[seedingPlacexCord][seedingPlaceyCord].hasDaisy()) {
                         DaisySimulationGUI.patches[seedingPlacexCord][seedingPlaceyCord].setDaisy(new Daisy(0,seedingPlacexCord,seedingPlaceyCord, 0)); // Create a white daisy
+                        DaisySimulationGUI.whiteDaisies++;
                     } else if (color==1 && !DaisySimulationGUI.patches[seedingPlacexCord][seedingPlaceyCord].hasDaisy()) {
                         DaisySimulationGUI.patches[seedingPlacexCord][seedingPlaceyCord].setDaisy(new Daisy(1, seedingPlacexCord, seedingPlaceyCord, 0)); // Create a black daisy
+                        DaisySimulationGUI.blackDaisies++;
                     }
                 }
             }
@@ -63,6 +65,9 @@ class Daisy {
             // If the daisys gonna die
           //  System.out.printf("%s Daisy at (%d, %d) died.%n", color, row, col);
             DaisySimulationGUI.patches[row][col].setDaisy(null); // Set the patch to empty (no daisy)
+
+            if(color==1) DaisySimulationGUI.blackDaisies--;
+            else if(color==0) DaisySimulationGUI.whiteDaisies--;
         }
     }
 

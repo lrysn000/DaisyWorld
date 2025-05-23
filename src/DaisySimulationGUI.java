@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -9,6 +12,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DaisySimulationGUI {
+    static int NUM_STEPS = 0;
+    public static final String CSV_FILE_PATH = "simulation_output.csv"; // Path for the CSV output file
 
     // Constants (static ones)
     public static final int MAX_AGE = 25;  // Maximum age of daisies
@@ -16,35 +21,32 @@ public class DaisySimulationGUI {
     public static final int COLS = 30;      // Number of columns in the patch grid
     public static double ALBEDO_OF_BLACKS = 0.25;
     public static double ALBEDO_OF_WHITES = 0.75;
-    public static int ALBEDO_OF_BLACKS_100 = 25;
-    public static int ALBEDO_OF_WHITES_100 = 75;
+    private static int ALBEDO_OF_BLACKS_100 = 25; // jus for slider use
+    private static int ALBEDO_OF_WHITES_100 = 75; // jus for slider use
+    public static double ALBEDO_OF_SURFACE = 0.4;
     public static int PERCENTAGE_OF_BLACKS = 20;
     public static int PERCENTAGE_OF_WHITE = 20;
     public static final double DIFFUSE_FACTOR = 0.5;
-    private static int whiteDaisies = 0;
-    private static int blackDaisies = 0;
+    public static int whiteDaisies = 0;
+    public static int blackDaisies = 0;
     public static Patch[][] patches;  // 2D array of patches
-    // Constants for the model
-
-
 
     // Non-static ones
     private double globalTemperature = 0;
-    private double solarLuminosity=0.6;
+    private double solarLuminosity = 0.6;
     private List<Daisy> daisies;
     private ExecutorService executor; // Executor service for concurrent execution
     private boolean startButtonEnabled = false;
     private boolean stopButtonEnabled = false;
 
-    // Added variables for stopping the simulation
     private volatile boolean running; // Used to control the simulation loop
-
+    private FileService fileService = new FileService();
 
     // GUI Components
     private JFrame frame;
     private JButton[][] buttons; // Buttons representing the grid
     private JLabel temperatureLabel; // Label to display the global temperature
-    private JComboBox <String> luminosityComboBox;
+    private JComboBox<String> luminosityComboBox;
     private JSlider blackDaisySlider; // Slider for black daisies
     private JSlider whiteDaisySlider; // Slider for white daisies
     private JLabel blackDaisyLabel; // Label for black daisy percentage
@@ -57,17 +59,17 @@ public class DaisySimulationGUI {
     private JButton stopButton;
     private JButton setupButton;
 
-
     public DaisySimulationGUI() {
         initialize();
     }
 
     public void initialize() {
-        if( daisies != null)
-         daisies.clear();
+        if (daisies != null)
+            daisies.clear();
 
         whiteDaisies = 0;
         blackDaisies = 0;
+        NUM_STEPS = 0;
 
         this.daisies = new ArrayList<>();
         patches = new Patch[ROWS][COLS];  // Initialize the patch grid
@@ -82,9 +84,8 @@ public class DaisySimulationGUI {
 
     // Setup initial conditions for the simulation
     public void setup(int lumiOption) {
-
         luminosityComboBox.setSelectedIndex(lumiOption);
-        switch (lumiOption){
+        switch (lumiOption) {
             case 0:
                 solarLuminosity = 0.6;
                 break;
@@ -103,6 +104,8 @@ public class DaisySimulationGUI {
         seedWhitesRandomly();
         calculateTemperature();
         System.out.println("Initial Global Temperature: " + globalTemperature);
+        fileService.writeToCSV(-1, globalTemperature,blackDaisies,whiteDaisies,
+                solarLuminosity,ALBEDO_OF_BLACKS,ALBEDO_OF_WHITES,ALBEDO_OF_SURFACE);  // Write the initial state to CSV
     }
 
     private void seedBlacksRandomly() {
@@ -116,7 +119,6 @@ public class DaisySimulationGUI {
                 daisies.add(d);
                 blackDaisies++;
                 patches[row][col].setDaisy(d);
-
             }
         }
     }
@@ -159,47 +161,46 @@ public class DaisySimulationGUI {
     public void simulateStep() {
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
-                // Linear?
                 patches[row][col].calculateTemperature(solarLuminosity);
             }
         }
+
         // Concurrent Temp Diffusion
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 final int r = row;
                 final int c = col;
-                executor.submit(() -> { // Concurrent execution pool
-                    patches[r][c].diffuse();
-                });
+                executor.submit(() -> patches[r][c].diffuse());
             }
         }
+
         // Concurrent Breeding
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 final int r = row;
                 final int c = col;
-                executor.submit(() -> { // Concurrent execution pool
+                executor.submit(() -> {
                     if (patches[r][c].hasDaisy())
                         patches[r][c].getDaisy().checkSurvivability();
                 });
             }
         }
 
-
         updateGlobalTemperature();
         System.out.printf("Global Temperature after step: %.2f%n", globalTemperature);
+        fileService.writeToCSV(NUM_STEPS, globalTemperature,blackDaisies,whiteDaisies,
+                solarLuminosity,ALBEDO_OF_BLACKS,ALBEDO_OF_WHITES,ALBEDO_OF_SURFACE); // Log step and temperature to CSV
         updateGridDisplay(); // Update GUI representation after each step
+        NUM_STEPS++;
     }
 
 
 
-    // UI shi
     private void createAndShowGUI() {
         frame = new JFrame("Daisy Simulation");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-
 
         // Create panel for the grid
         JPanel gridPanel = new JPanel(new GridLayout(ROWS, COLS));
@@ -225,11 +226,10 @@ public class DaisySimulationGUI {
         JPanel luminosityPanel = new JPanel();
         luminosityPanel.setLayout(new BoxLayout(luminosityPanel, BoxLayout.Y_AXIS));
         String[] luminosityOptions = {"Low Luminosity ", "Our Luminosity ", "High Luminosity "};
-       luminosityComboBox = new JComboBox<>(luminosityOptions); // Initialize ComboBox
+        luminosityComboBox = new JComboBox<>(luminosityOptions); // Initialize ComboBox
         luminosityPanel.add(new JLabel("Select Solar Luminosity:"));
         luminosityPanel.add(luminosityComboBox); // Add ComboBox to panel
         luminosityComboBox.setSelectedIndex(0);
-      //  frame.add(luminosityPanel, BorderLayout.NORTH);
 
         // Black Daisy Slider
         blackDaisySlider = new JSlider(0, 50, PERCENTAGE_OF_BLACKS);
@@ -252,50 +252,42 @@ public class DaisySimulationGUI {
         luminosityPanel.add(whiteDaisyLabel);
         luminosityPanel.add(whiteDaisySlider);
 
-
         // Black Daisy Albedo Slider
         blackDaisyAlbedoSlider = new JSlider(0, 100, ALBEDO_OF_BLACKS_100);
         blackDaisyAlbedoSlider.setMajorTickSpacing(10);
         blackDaisyAlbedoSlider.setPaintTicks(true);
         blackDaisyAlbedoSlider.setPaintLabels(true);
-        blackDaisyAlbedoLabel = new JLabel("Black Daisy Albedo: " + ALBEDO_OF_BLACKS );
-        blackDaisyAlbedoSlider.addChangeListener(e -> blackDaisyAlbedoLabel.setText("Black Daisy Albedo: " +getDoubleFromSlider( blackDaisyAlbedoSlider.getValue())));
+        blackDaisyAlbedoLabel = new JLabel("Black Daisy Albedo: " + ALBEDO_OF_BLACKS);
+        blackDaisyAlbedoSlider.addChangeListener(e -> blackDaisyAlbedoLabel.setText("Black Daisy Albedo: " + getDoubleFromSlider(blackDaisyAlbedoSlider.getValue())));
 
         // White Daisy Albedo Slider
         whiteDaisyAlbedoSlider = new JSlider(0, 100, ALBEDO_OF_WHITES_100);
         whiteDaisyAlbedoSlider.setMajorTickSpacing(10);
         whiteDaisyAlbedoSlider.setPaintTicks(true);
         whiteDaisyAlbedoSlider.setPaintLabels(true);
-        whiteDaisyAlbedoLabel = new JLabel("White Daisy Albedo: " + ALBEDO_OF_WHITES );
-        whiteDaisyAlbedoSlider.addChangeListener(e -> whiteDaisyAlbedoLabel.setText("White Daisy Albedo: " + getDoubleFromSlider( whiteDaisyAlbedoSlider.getValue())));
+        whiteDaisyAlbedoLabel = new JLabel("White Daisy Albedo: " + ALBEDO_OF_WHITES);
+        whiteDaisyAlbedoSlider.addChangeListener(e -> whiteDaisyAlbedoLabel.setText("White Daisy Albedo: " + getDoubleFromSlider(whiteDaisyAlbedoSlider.getValue())));
 
         luminosityPanel.add(blackDaisyAlbedoLabel);
         luminosityPanel.add(blackDaisyAlbedoSlider);
         luminosityPanel.add(whiteDaisyAlbedoLabel);
         luminosityPanel.add(whiteDaisyAlbedoSlider);
 
-
-
-
-
-
-        // Panel for sliders
-
         // Setup Button
-         setupButton = new JButton("Setup Simulation");
-         setupButton.setPreferredSize(new Dimension(100,150));
+        setupButton = new JButton("Setup Simulation");
+        setupButton.setPreferredSize(new Dimension(100, 150));
         setupButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // For interface updates only
                 startButtonEnabled = true;
                 stopButtonEnabled = false;
-                PERCENTAGE_OF_BLACKS= blackDaisySlider.getValue();
+                PERCENTAGE_OF_BLACKS = blackDaisySlider.getValue();
                 PERCENTAGE_OF_WHITE = whiteDaisySlider.getValue();
                 ALBEDO_OF_BLACKS_100 = blackDaisyAlbedoSlider.getValue();
-                ALBEDO_OF_BLACKS = getDoubleFromSlider( blackDaisyAlbedoSlider.getValue() );
+                ALBEDO_OF_BLACKS = getDoubleFromSlider(blackDaisyAlbedoSlider.getValue());
                 ALBEDO_OF_WHITES_100 = whiteDaisyAlbedoSlider.getValue();
-                ALBEDO_OF_WHITES = getDoubleFromSlider( whiteDaisyAlbedoSlider.getValue() );
+                ALBEDO_OF_WHITES = getDoubleFromSlider(whiteDaisyAlbedoSlider.getValue());
 
                 int option = luminosityComboBox.getSelectedIndex();
                 daisies.clear();
@@ -305,13 +297,9 @@ public class DaisySimulationGUI {
                 updateGridDisplay(); // Refresh the grid display after setup
             }
         });
-        //luminosityPanel.add(setupButton);
-        // Add setup button to the frame
-
-       // frame.add(luminosityPanel, BorderLayout.NORTH);
 
         startButton = new JButton("Start Simulation");
-        startButton.setPreferredSize(new Dimension(100,150));
+        startButton.setPreferredSize(new Dimension(100, 150));
         startButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -320,12 +308,11 @@ public class DaisySimulationGUI {
                 setupButton.setEnabled(false);
 
                 PERCENTAGE_OF_BLACKS = blackDaisySlider.getValue();
-                PERCENTAGE_OF_WHITE= whiteDaisySlider.getValue();
-                ALBEDO_OF_BLACKS = getDoubleFromSlider( blackDaisyAlbedoSlider.getValue());
-                ALBEDO_OF_WHITES = getDoubleFromSlider( whiteDaisyAlbedoSlider.getValue());
+                PERCENTAGE_OF_WHITE = whiteDaisySlider.getValue();
+                ALBEDO_OF_BLACKS = getDoubleFromSlider(blackDaisyAlbedoSlider.getValue());
+                ALBEDO_OF_WHITES = getDoubleFromSlider(whiteDaisyAlbedoSlider.getValue());
 
-
-                switch (luminosityComboBox.getSelectedIndex()){
+                switch (luminosityComboBox.getSelectedIndex()) {
                     case 0:
                         solarLuminosity = 0.6;
                         break;
@@ -354,10 +341,9 @@ public class DaisySimulationGUI {
             }
         });
 
-
         // Stop Button
         stopButton = new JButton("Stop Simulation");
-        stopButton.setPreferredSize(new Dimension(100,150));
+        stopButton.setPreferredSize(new Dimension(100, 150));
         stopButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -378,6 +364,7 @@ public class DaisySimulationGUI {
         ControlPanel.add(luminosityPanel, BorderLayout.SOUTH);
         startButton.setEnabled(startButtonEnabled);
         frame.add(ControlPanel, BorderLayout.WEST);
+
         // Setup frame properties and display
         frame.pack();
         frame.setLocationRelativeTo(null);
@@ -389,8 +376,8 @@ public class DaisySimulationGUI {
             for (int col = 0; col < COLS; col++) {
                 if (patches[row][col].hasDaisy()) {
                     Daisy d = patches[row][col].getDaisy();
-                    buttons[row][col].setText(d.getColor()==1? "B" : "W"); // Show initial of the color
-                    buttons[row][col].setBackground(d.getColor()==1 ? Color.BLACK : Color.WHITE);
+                    buttons[row][col].setText(d.getColor() == 1 ? "B" : "W"); // Show initial of the color
+                    buttons[row][col].setBackground(d.getColor() == 1 ? Color.BLACK : Color.WHITE);
                 } else {
                     buttons[row][col].setText(""); // Clear text if no daisy is present
                     buttons[row][col].setBackground(Color.LIGHT_GRAY); // Set a light gray background for empty patches
@@ -399,12 +386,10 @@ public class DaisySimulationGUI {
         }
     }
 
-
     // Convert slider integer value (0-100) to double value (0.0-1.0)
     private double getDoubleFromSlider(int sliderValue) {
-        return 0.0 + (sliderValue / 100.0) ;
+        return 0.0 + (sliderValue / 100.0);
     }
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(DaisySimulationGUI::new); // Start the GUI on the Event Dispatch Thread
