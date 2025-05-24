@@ -104,7 +104,8 @@ public class DaisySimulationGUI {
         seedWhitesRandomly();
         calculateTemperature();
         System.out.println("Initial Global Temperature: " + globalTemperature);
-        fileService.writeToCSV(-1, globalTemperature,blackDaisies,whiteDaisies,
+        fileService.writeCSVHeader();
+        fileService.writeToCSV(0, globalTemperature,blackDaisies,whiteDaisies,
                 solarLuminosity,ALBEDO_OF_BLACKS,ALBEDO_OF_WHITES,ALBEDO_OF_SURFACE);  // Write the initial state to CSV
     }
 
