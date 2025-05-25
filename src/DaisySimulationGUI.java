@@ -188,8 +188,8 @@ public class DaisySimulationGUI {
         }
 
         updateGlobalTemperature();
-        System.out.printf("Global Temperature after step: %.2f%n", globalTemperature);
-        fileService.writeToCSV(NUM_STEPS, globalTemperature,blackDaisies,whiteDaisies,
+        System.out.printf("Step " + NUM_STEPS + ": Global Temperature after step: %.2f%n", globalTemperature);
+        fileService.writeToCSV(NUM_STEPS+1, globalTemperature,blackDaisies,whiteDaisies,
                 solarLuminosity,ALBEDO_OF_BLACKS,ALBEDO_OF_WHITES,ALBEDO_OF_SURFACE); // Log step and temperature to CSV
         updateGridDisplay(); // Update GUI representation after each step
         NUM_STEPS++;
