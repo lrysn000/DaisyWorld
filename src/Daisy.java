@@ -33,7 +33,7 @@ class Daisy {
         if (isAlive()) {
            double temp = DaisySimulationGUI.patches[row][col].getTemperature();
            double seedThreshold = (0.1457 * temp) - (0.0032 * Math.pow(temp, 2)) - 0.6443;
-            seedThreshold *= (1 - DaisySimulationGUI.patches[row][col].getSoilPollution());
+           seedThreshold *= (1 - DaisySimulationGUI.patches[row][col].getSoilPollution()); // Considering the pollution
             // Probability check for seeding based on the seedThreshold
             if (Math.random() < seedThreshold) {
 
@@ -56,12 +56,10 @@ class Daisy {
                     if (color==0 && !DaisySimulationGUI.patches[seedingPlacexCord][seedingPlaceyCord].hasDaisy()) {
                         DaisySimulationGUI.patches[seedingPlacexCord][seedingPlaceyCord].setDaisy(new Daisy(0,
                                 seedingPlacexCord,seedingPlaceyCord, 0)); // Create a white daisy
-
                         DaisySimulationGUI.whiteDaisies++;
                     } else if (color==1 && !DaisySimulationGUI.patches[seedingPlacexCord][seedingPlaceyCord].hasDaisy()) {
                         DaisySimulationGUI.patches[seedingPlacexCord][seedingPlaceyCord].setDaisy(new Daisy(1,
                                 seedingPlacexCord, seedingPlaceyCord, 0)); // Create a black daisy
-
                         DaisySimulationGUI.blackDaisies++;
                     }
                 }
@@ -71,7 +69,7 @@ class Daisy {
             else if(color==0) DaisySimulationGUI.whiteDaisies--;
             DaisySimulationGUI.patches[row][col].setSoilPollution(
                     DaisySimulationGUI.patches[row][col].getSoilPollution() + 0.1
-            );
+            );   // Leaves 0.1 soil pollution after death
             DaisySimulationGUI.patches[row][col].setDaisy(null); // Set the patch to empty (no daisy)
 
         }

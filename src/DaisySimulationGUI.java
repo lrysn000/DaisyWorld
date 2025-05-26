@@ -182,13 +182,14 @@ public class DaisySimulationGUI {
                 final int c = col;
                 executor.submit(() -> {
                     if (patches[r][c].hasDaisy()) {
+                        // Cleaning the patch per step
+                        // comment the line to disable it
                         patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.005);
                         patches[r][c].getDaisy().checkSurvivability();
                     }
                     else
+                        // patches self-cleaning
                         patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.001);
-
-
 
                 });
             }
