@@ -2,9 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -381,7 +378,9 @@ public class DaisySimulationGUI {
                     buttons[row][col].setBackground(d.getColor() == 1 ? Color.BLACK : Color.WHITE);
                 } else {
                     buttons[row][col].setText(""); // Clear text if no daisy is present
-                    buttons[row][col].setBackground(Color.LIGHT_GRAY); // Set a light gray background for empty patches
+                    double pollution = patches[row][col].getSoilPollution();
+                    int gray = (int)(200 - pollution * 150); // 污染越高越深
+                    buttons[row][col].setBackground(new Color(gray,gray,gray)); // Set a light gray background for empty patches
                 }
             }
         }

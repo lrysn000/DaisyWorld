@@ -1,5 +1,3 @@
-import java.util.List;
-
 // Patch class representing each patch of temperature
 class Patch {
     private final int [] dirx = {-1,1,0,0};
@@ -8,10 +6,12 @@ class Patch {
     private final int col;
     private double temperature = 0;
     private Daisy daisy=null;
+    private double soilPollution = 0.0;
 
     public Patch(int row, int col) {
         this.row = row;
         this.col = col;
+        this.soilPollution = 0.0;
     }
 
     public void calculateTemperature(double solarLuminosity) {
@@ -63,6 +63,13 @@ class Patch {
     public void setTemperature(double temperature) {this.temperature = temperature;}
     public void setDaisy(Daisy daisy) {this.daisy = daisy;}
     public boolean hasDaisy() {return daisy != null;}
+    public double getSoilPollution() {
+        return soilPollution;
+    }
+
+    public void setSoilPollution(double value) {
+        this.soilPollution = Math.max(0, Math.min(1, value)); // 限制在0~1
+    }
 
 
 }

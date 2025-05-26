@@ -33,6 +33,7 @@ class Daisy {
         if (isAlive()) {
            double temp = DaisySimulationGUI.patches[row][col].getTemperature();
            double seedThreshold = (0.1457 * temp) - (0.0032 * Math.pow(temp, 2)) - 0.6443;
+            seedThreshold *= (1 - DaisySimulationGUI.patches[row][col].getSoilPollution());
             // Probability check for seeding based on the seedThreshold
             if (Math.random() < seedThreshold) {
 
@@ -62,12 +63,16 @@ class Daisy {
                 }
             }
         } else {
+            if(color==1) DaisySimulationGUI.blackDaisies--;
+            else if(color==0) DaisySimulationGUI.whiteDaisies--;
+            DaisySimulationGUI.patches[row][col].setSoilPollution(
+                    DaisySimulationGUI.patches[row][col].getSoilPollution() + 0.1
+            );
             // If the daisys gonna die
           //  System.out.printf("%s Daisy at (%d, %d) died.%n", color, row, col);
             DaisySimulationGUI.patches[row][col].setDaisy(null); // Set the patch to empty (no daisy)
 
-            if(color==1) DaisySimulationGUI.blackDaisies--;
-            else if(color==0) DaisySimulationGUI.whiteDaisies--;
+
         }
     }
 
