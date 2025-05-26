@@ -182,9 +182,12 @@ public class DaisySimulationGUI {
                 final int c = col;
                 executor.submit(() -> {
                     if (patches[r][c].hasDaisy()) {
-                        //patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.005);
+                        patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.005);
                         patches[r][c].getDaisy().checkSurvivability();
                     }
+                    else
+                        patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.001);
+
 
 
                 });

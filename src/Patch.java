@@ -6,7 +6,7 @@ class Patch {
     private final int col;
     private double temperature = 0;
     private Daisy daisy=null;
-    private double soilPollution = 0.0;
+    private double soilPollution ;
 
     public Patch(int row, int col) {
         this.row = row;
