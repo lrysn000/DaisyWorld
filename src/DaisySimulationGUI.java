@@ -73,6 +73,9 @@ public class DaisySimulationGUI {
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 patches[row][col] = new Patch(row, col);
+                if (Math.random() < 0.30) {
+                    patches[row][col].setSoilPollution(0.2 + Math.random() * 0.6); // 0.2~0.8
+                }
             }
         }
         executor = Executors.newFixedThreadPool(ROWS * COLS); // Create a thread pool
@@ -178,8 +181,12 @@ public class DaisySimulationGUI {
                 final int r = row;
                 final int c = col;
                 executor.submit(() -> {
-                    if (patches[r][c].hasDaisy())
+                    if (patches[r][c].hasDaisy()) {
+                        //patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.005);
                         patches[r][c].getDaisy().checkSurvivability();
+                    }
+
+
                 });
             }
         }
