@@ -67,9 +67,9 @@ class Daisy {
         } else {
             if(color==1) DaisySimulationGUI.blackDaisies--;
             else if(color==0) DaisySimulationGUI.whiteDaisies--;
-            DaisySimulationGUI.patches[row][col].setSoilPollution(
-                    DaisySimulationGUI.patches[row][col].getSoilPollution() + 0.1
-            );   // Leaves 0.1 soil pollution after death
+//            DaisySimulationGUI.patches[row][col].setSoilPollution(
+//                    DaisySimulationGUI.patches[row][col].getSoilPollution() + 0.1
+//            );   // Leaves 0.1 soil pollution after death
             DaisySimulationGUI.patches[row][col].setDaisy(null); // Set the patch to empty (no daisy)
 
         }
