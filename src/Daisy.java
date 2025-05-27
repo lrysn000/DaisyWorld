@@ -40,7 +40,7 @@ class Daisy {
 
     /**
      * Checks survivability of the daisy and handles its reproduction or death.
-     * - If alive, attempts to seed a new daisy in adjacent empty patch based on temperature and pollution.
+     * - If alive, attempts to seed a new daisy in adjacent empty patch based on temperature.
      * - If dead, removes itself from the patch and updates daisy counters.
      */
     public void checkSurvivability() {
@@ -53,7 +53,6 @@ class Daisy {
             // Calculate local temperature and seed probability threshold
             double temp = DaisySimulationGUI.patches[row][col].getTemperature();
             double seedThreshold = (0.1457 * temp) - (0.0032 * Math.pow(temp, 2)) - 0.6443;
-            seedThreshold *= (1 - DaisySimulationGUI.patches[row][col].getSoilPollution()); // Account for pollution
 
             // Probability check for seeding based on the seedThreshold
             if (Math.random() < seedThreshold) {

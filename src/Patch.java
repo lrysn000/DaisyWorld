@@ -15,19 +15,15 @@ class Patch {
     // Daisy object representing the daisy on this patch, if any
     private Daisy daisy = null;
 
-    // Pollution level of the soil on this patch, range is limited to [0, 1]
-    private double soilPollution;
-
     /**
      * Constructor for Patch.
-     * Initializes position and sets initial soil pollution to 0.
+     * Initializes position.
      * @param row Row index of the patch
      * @param col Column index of the patch
      */
     public Patch(int row, int col) {
         this.row = row;
         this.col = col;
-        this.soilPollution = 0.0;
     }
 
     /**
@@ -113,20 +109,6 @@ class Patch {
     // Checks whether the patch currently has a daisy
     public boolean hasDaisy() {
         return daisy != null;
-    }
-
-    // Returns the current soil pollution level (range 0 to 1)
-    public double getSoilPollution() {
-        return soilPollution;
-    }
-
-    /**
-     * Sets the soil pollution level for the patch.
-     * Value is clamped to stay within [0, 1].
-     * @param value Pollution level to set
-     */
-    public void setSoilPollution(double value) {
-        this.soilPollution = Math.max(0, Math.min(1, value));
     }
 
 }

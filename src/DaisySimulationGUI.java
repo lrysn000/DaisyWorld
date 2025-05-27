@@ -93,13 +93,10 @@ public class DaisySimulationGUI {
         this.daisies = new ArrayList<>();
         patches = new Patch[ROWS][COLS];
 
-        // Initialize patches and randomize soil pollution
+        // Initialize patches
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 patches[row][col] = new Patch(row, col);
-                if (Math.random() < 0.30) {
-                    patches[row][col].setSoilPollution(0.4 + Math.random() * 0.6); // Random pollution between 0.4~1.0
-                }
             }
         }
 
@@ -225,25 +222,14 @@ public class DaisySimulationGUI {
             }
         }
 
-        // Step 3: Breeding and pollution logic concurrently
+        // Step 3: Breeding logic concurrently
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 final int r = row;
                 final int c = col;
                 executor.submit(() -> {
-                    if (Math.random() < 0.3 && NUM_STEPS % 30 == 0) {
-                        double pollutionValue = 0.4 + Math.random() * 0.6;
-                        if (pollutionValue > patches[r][c].getSoilPollution()) {
-                            patches[r][c].setSoilPollution(pollutionValue);  // Pollute the soil
-                        }
-                    }
                     if (patches[r][c].hasDaisy()) {
-                        // Self-cleaning patch when daisy is present
-                        patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.005);
                         patches[r][c].getDaisy().checkSurvivability();  // Handle daisy survival logic
-                    } else {
-                        // Bare patch slowly cleans itself
-                        patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.0008);
                     }
                 });
             }
@@ -260,9 +246,9 @@ public class DaisySimulationGUI {
     }
 
 
-    // DaisySimulationGUI.java
-// This class implements the main GUI and control logic for the Daisyworld ecological simulation.
-
+    /**
+     * Initializes and displays the main GUI window for the Daisyworld simulation.
+     */
     private void createAndShowGUI() {
         // Initializes and displays the main simulation GUI window
 
@@ -461,7 +447,7 @@ public class DaisySimulationGUI {
     }
 
     /**
-     * Updates the display of the grid with current daisy and pollution data.
+     * Updates the display of the grid with current daisy.
      */
     private void updateGridDisplay() {
         for (int row = 0; row < ROWS; row++) {
@@ -471,10 +457,8 @@ public class DaisySimulationGUI {
                     buttons[row][col].setText(d.getColor() == 1 ? "B" : "W"); // B for black, W for white
                     buttons[row][col].setBackground(d.getColor() == 1 ? Color.BLACK : Color.WHITE);
                 } else {
-                    buttons[row][col].setText(""); // Clear text
-                    double pollution = patches[row][col].getSoilPollution();
-                    int gray = (int) (200 - pollution * 150); // Higher pollution → darker gray
-                    buttons[row][col].setBackground(new Color(gray, gray, gray)); // Background color
+                    buttons[row][col].setText(""); // Clear text if no daisy is present
+                    buttons[row][col].setBackground(Color.LIGHT_GRAY); // Set a light gray background for empty patches
                 }
             }
         }
