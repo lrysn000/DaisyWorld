@@ -181,7 +181,7 @@ public class DaisySimulationGUI {
                 final int r = row;
                 final int c = col;
                 executor.submit(() -> {
-                    if (Math.random() < 0.3 && NUM_STEPS % 20 == 0) {
+                    if (Math.random() < 0.3 && NUM_STEPS % 30 == 0) {
                         double pollutionValue = 0.4 + Math.random() * 0.6;
                         if (pollutionValue > patches[r][c].getSoilPollution()) {
                             patches[r][c].setSoilPollution(pollutionValue); // 0.4~1.0
@@ -190,12 +190,12 @@ public class DaisySimulationGUI {
                     if (patches[r][c].hasDaisy()) {
                         // Cleaning the patch per step
                         // comment the line to disable it
-//                        patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.005);
+                        patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.005);
                         patches[r][c].getDaisy().checkSurvivability();
                     }
                     else {
                         // patches self-cleaning
-                        patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.0001);
+                        patches[r][c].setSoilPollution(patches[r][c].getSoilPollution() - 0.0008);
                     }
 
 
