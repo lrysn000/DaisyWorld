@@ -1,75 +1,132 @@
-// Patch class representing each patch of temperature
+// Patch class representing each patch of temperature, soil condition, and possible daisy occupation
 class Patch {
-    private final int [] dirx = {-1,1,0,0};
-    private final int [] diry = {0,0,-1,1};
+
+    // Direction arrays used to locate the 4 direct neighbors (up, down, left, right)
+    private final int[] dirx = {-1, 1, 0, 0};
+    private final int[] diry = {0, 0, -1, 1};
+
+    // The row and column index of this patch in the grid
     private final int row;
     private final int col;
-    private double temperature = 0;
-    private Daisy daisy=null;
-    private double soilPollution ;
 
+    // Current temperature of this patch
+    private double temperature = 0;
+
+    // Daisy object representing the daisy on this patch, if any
+    private Daisy daisy = null;
+
+    // Pollution level of the soil on this patch, range is limited to [0, 1]
+    private double soilPollution;
+
+    /**
+     * Constructor for Patch.
+     * Initializes position and sets initial soil pollution to 0.
+     * @param row Row index of the patch
+     * @param col Column index of the patch
+     */
     public Patch(int row, int col) {
         this.row = row;
         this.col = col;
         this.soilPollution = 0.0;
     }
 
+    /**
+     * Calculates the temperature of the patch based on solar luminosity.
+     * If a daisy is present, its albedo affects the absorbed luminosity.
+     * Temperature is adjusted by averaging current and calculated heating.
+     * @param solarLuminosity The current solar luminosity value
+     */
     public void calculateTemperature(double solarLuminosity) {
         double absorbedLuminosity;
 
         if (!hasDaisy()) {
-            // If there are no daisies on this patch
-            absorbedLuminosity = (1 - DaisySimulationGUI.ALBEDO_OF_SURFACE) * solarLuminosity; //  albedo-of-surface : 0.4
+            // No daisy: use default surface albedo to compute absorbed light
+            absorbedLuminosity = (1 - DaisySimulationGUI.ALBEDO_OF_SURFACE) * solarLuminosity;
         } else {
-            // If there is at least one daisy, get the albedo from the daisies here
-            Daisy currentDaisy = daisy; // Assuming only one daisy is present in this patch
+            // With daisy: use the daisy's albedo
+            Daisy currentDaisy = daisy;
             absorbedLuminosity = (1 - currentDaisy.getAlbedo()) * solarLuminosity;
         }
 
-        // Calculate local heating based on absorbed luminosity
+        // Convert absorbed luminosity into local temperature effect
         double localHeating;
         if (absorbedLuminosity > 0) {
             localHeating = 72 * Math.log(absorbedLuminosity) + 80;
         } else {
-            localHeating = 80; // Setting a lower limit if absorbed luminosity is 0 or negative
+            // Fallback if luminosity is too low or negative
+            localHeating = 80;
         }
 
-        // Set the patch temperature to the average of current temperature and local heating effect
+        // Smooth temperature change by averaging with existing value
         temperature = (temperature + localHeating) / 2;
     }
 
-    public void diffuse()
-    {
-        double df=DaisySimulationGUI.DIFFUSE_FACTOR;
+    /**
+     * Diffuses part of this patch's temperature to its 4 direct neighbors.
+     * The amount diffused is determined by DIFFUSE_FACTOR.
+     * Temperature is reduced locally and distributed equally to adjacent patches.
+     */
+    public void diffuse() {
+        double df = DaisySimulationGUI.DIFFUSE_FACTOR;
         double df_amount = temperature * df;
+
+        // Reduce local temperature by diffusion factor
         temperature = temperature * df;
-        for(int i=0;i<4;i++)
-        {
-            // Search in 4 dirs
+
+        // Distribute temperature equally to 4 neighboring patches
+        for (int i = 0; i < 4; i++) {
             int newRow = row + dirx[i];
             int newCol = col + diry[i];
-            if(newRow >= 0 && newRow < DaisySimulationGUI.ROWS && newCol >= 0 && newCol < DaisySimulationGUI.COLS)
-            {
-                DaisySimulationGUI.patches[newRow][newCol].setTemperature(DaisySimulationGUI.patches[newRow][newCol].getTemperature()+(df_amount/4));
+
+            // Only diffuse to valid (in-bound) neighbors
+            if (newRow >= 0 && newRow < DaisySimulationGUI.ROWS &&
+                    newCol >= 0 && newCol < DaisySimulationGUI.COLS) {
+
+                DaisySimulationGUI.patches[newRow][newCol].setTemperature(
+                        DaisySimulationGUI.patches[newRow][newCol].getTemperature() + (df_amount / 4));
             }
         }
     }
 
-    // Getter & Setters
+    // ===== Getter and Setter methods =====
+
+    // Returns the daisy currently occupying the patch (if any)
     public Daisy getDaisy() {
         return daisy;
     }
-    public double getTemperature() {return temperature;}
-    public void setTemperature(double temperature) {this.temperature = temperature;}
-    public void setDaisy(Daisy daisy) {this.daisy = daisy;}
-    public boolean hasDaisy() {return daisy != null;}
+
+    // Returns the current temperature of the patch
+    public double getTemperature() {
+        return temperature;
+    }
+
+    // Sets the temperature of the patch to a specified value
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
+    }
+
+    // Places a daisy on this patch
+    public void setDaisy(Daisy daisy) {
+        this.daisy = daisy;
+    }
+
+    // Checks whether the patch currently has a daisy
+    public boolean hasDaisy() {
+        return daisy != null;
+    }
+
+    // Returns the current soil pollution level (range 0 to 1)
     public double getSoilPollution() {
         return soilPollution;
     }
 
+    /**
+     * Sets the soil pollution level for the patch.
+     * Value is clamped to stay within [0, 1].
+     * @param value Pollution level to set
+     */
     public void setSoilPollution(double value) {
-        this.soilPollution = Math.max(0, Math.min(1, value)); // 限制在0~1
+        this.soilPollution = Math.max(0, Math.min(1, value));
     }
-
 
 }
