@@ -88,11 +88,6 @@ class Daisy {
             if (color == 1) DaisySimulationGUI.blackDaisies--;
             else if (color == 0) DaisySimulationGUI.whiteDaisies--;
 
-            // Optionally, leave pollution behind (currently commented out)
-            // DaisySimulationGUI.patches[row][col].setSoilPollution(
-            //     DaisySimulationGUI.patches[row][col].getSoilPollution() + 0.1
-            // );
-
             DaisySimulationGUI.patches[row][col].setDaisy(null); // Remove daisy from patch
         }
     }
