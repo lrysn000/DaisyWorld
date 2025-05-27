@@ -260,9 +260,9 @@ public class DaisySimulationGUI {
     }
 
 
-    // DaisySimulationGUI.java
-// This class implements the main GUI and control logic for the Daisyworld ecological simulation.
-
+    /**
+     * Initializes and displays the main GUI window for the Daisyworld simulation.
+     */
     private void createAndShowGUI() {
         // Initializes and displays the main simulation GUI window
 
